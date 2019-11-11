@@ -3,7 +3,6 @@ import { History } from 'history'
 import * as React from 'react'
 import {
   Button,
-  //Checkbox,
   Divider,
   Grid,
   Header,
@@ -47,7 +46,6 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
-      // const dueDate = this.calculateDueDate()
       const newStatus = await createTodo(this.props.auth.getIdToken(), {
         content: this.state.newStatusContent,
       })
@@ -71,23 +69,6 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       alert('Todo deletion failed')
     }
   }
-
-  // onTodoCheck = async (pos: number) => {
-  //   try {
-  //     const status = this.state.status[pos]
-  //     await patchTodo(this.props.auth.getIdToken(), status.userId, {
-  //       content: status.content,
-  //       userId: status.userId
-  //     })
-  //     this.setState({
-  //       status: update(this.state.status, {
-  //         [pos]: { done: { $set: !todo.done } }
-  //       })
-  //     })
-  //   } catch {
-  //     alert('Todo deletion failed')
-  //   }
-  // }
 
   async componentDidMount() {
     try {
@@ -158,49 +139,14 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   renderTodosList() {
     return (
-      // <Grid padded>
+      
         this.state.status.map((stat, pos) => {
-
-          // return (
-          //   <Grid.Row key={stat.statusId}>
-          //     <Grid.Column width={1} verticalAlign="middle">
-          //     </Grid.Column>
-          //     <Grid.Column width={10} verticalAlign="middle">
-          //       {stat.content}
-          //     </Grid.Column>
-          //     <Grid.Column width={1} floated="right">
-          //       <Button
-          //         icon
-          //         color="blue"
-          //         onClick={() => this.onEditButtonClick(stat.statusId)}
-          //       >
-          //         <Icon name="pencil" />
-          //       </Button>
-          //     </Grid.Column>
-          //     <Grid.Column width={1} floated="right">
-          //       <Button
-          //         icon
-          //         color="red"
-          //         onClick={() => this.onTodoDelete(stat.statusId)}
-          //       >
-          //         <Icon name="delete" />
-          //       </Button>
-          //     </Grid.Column>
-          //     {stat.attachmentUrl && (
-          //       <Image src={stat.attachmentUrl} size="small" wrapped />
-          //     )}
-          //     <Grid.Column width={16}>
-          //       <Divider />
-          //     </Grid.Column>
-          //   </Grid.Row>
-          // )
 
           return (
             <Card>
               {stat.attachmentUrl && (
               <Image src={stat.attachmentUrl} wrapped ui={false} /> )}
               <Card.Content>
-                {/* <Card.Header>Matthew</Card.Header> */}
                 <Card.Meta>
                   <span className='date'></span>
                 </Card.Meta>
@@ -225,7 +171,6 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
             </Card>
           )
         })
-      // </Grid>
     )
   }
 
