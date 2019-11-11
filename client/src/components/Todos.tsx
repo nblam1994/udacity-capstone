@@ -1,6 +1,5 @@
 import dateFormat from 'dateformat'
 import { History } from 'history'
-import update from 'immutability-helper'
 import * as React from 'react'
 import {
   Button,
@@ -52,8 +51,9 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       const newStatus = await createTodo(this.props.auth.getIdToken(), {
         content: this.state.newStatusContent,
       })
+      this.state.status.push(newStatus);
       this.setState({
-        status: [...this.state.status, newStatus],
+        status: this.state.status,
         newStatusContent: ''
       })
     } catch {
