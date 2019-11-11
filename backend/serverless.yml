@@ -1,5 +1,5 @@
 service:
-  name: serverless-todo-app
+  name: serverless-status-app
 
 plugins:
   - serverless-webpack
@@ -12,43 +12,103 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
 
+  environment:
+    STATUS_TABLE: Status-${self:provider.stage}
+    S3_BUCKET_NAME: status-lam-${self:provider.stage}
+
+custom:
+  documentation:
+      api:
+        info:
+          version: v1.0.0
+          title: Udacity-status-api
+          description: Capstone project Udacity
+      models:
+        - name: CreateStatusRequest
+          contentType: application/json
+          schema: ${file(src/requests/CreateStatusRequest.ts)}
+        - name: UpdateStatusRequest
+          contentType: application/json
+          schema: ${file(src/requests/UpdateStatusRequest.ts)}
+
 functions:
 
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
   # TODO: Configure this function
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  GetStatuses:
+    handler: src/lambda/http/getStatuses.handler
     events:
       - http:
           method: get
-          path: todos
+          path: status
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STATUS_TABLE}
+
 
   # TODO: Configure this function
-  GetTodos:
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+  CreateStatus:
+    handler: src/lambda/http/createStatus.handler
     events:
       - http:
           method: post
-          path: todos
+          path: status
+          cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: "Create status item"
+            description: "Create status item"
+            requestModels:
+              "application/json": CreateStatusRequest
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STATUS_TABLE}
 
   # TODO: Configure this function
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  UpdateStatus:
+    handler: src/lambda/http/updateStatus.handler
     events:
       - http:
           method: patch
-          path: todos/{todoId}
+          path: status/{statusId}
+          cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: "Update status item"
+            description: "Update status item"
+            requestModels:
+              "application/json": UpdateStatusRequest
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STATUS_TABLE}
 
   # TODO: Configure this function
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteStatus:
+    handler: src/lambda/http/deleteStatus.handler
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: status/{statusId}
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STATUS_TABLE}
+
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -56,8 +116,53 @@ functions:
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: status/{statusId}/attachment
+          ors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:*
+        Resource: arn:aws:s3:::${self:provider.environment.S3_BUCKET_NAME}/*
+          
 
 resources:
   Resources:
-    # TODO: Add any necessary AWS resources
+    TodosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: statusId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: statusId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.STATUS_TABLE}
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET_NAME}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - PUT
+              MaxAge: 300

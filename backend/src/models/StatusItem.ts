@@ -1,4 +1,4 @@
-export interface Status {
+export interface StatusItem {
   userId: string
   statusId: string
   createdAt: string

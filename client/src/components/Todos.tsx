@@ -4,19 +4,21 @@ import update from 'immutability-helper'
 import * as React from 'react'
 import {
   Button,
-  Checkbox,
+  //Checkbox,
   Divider,
   Grid,
   Header,
   Icon,
   Input,
   Image,
-  Loader
+  Loader,
+  Card
+
 } from 'semantic-ui-react'
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
 import Auth from '../auth/Auth'
-import { Todo } from '../types/Todo'
+import { Status } from '../types/Todo'
 
 interface TodosProps {
   auth: Auth
@@ -24,76 +26,74 @@ interface TodosProps {
 }
 
 interface TodosState {
-  todos: Todo[]
-  newTodoName: string
+  status: Status[]
+  newStatusContent: string
   loadingTodos: boolean
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
-    todos: [],
-    newTodoName: '',
+    status: [],
+    newStatusContent: '',
     loadingTodos: true
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ newTodoName: event.target.value })
+    this.setState({ newStatusContent: event.target.value })
   }
 
-  onEditButtonClick = (todoId: string) => {
-    this.props.history.push(`/todos/${todoId}/edit`)
+  onEditButtonClick = (statusId: string) => {
+    this.props.history.push(`/todos/${statusId}/edit`)
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
-      const dueDate = this.calculateDueDate()
-      const newTodo = await createTodo(this.props.auth.getIdToken(), {
-        name: this.state.newTodoName,
-        dueDate
+      // const dueDate = this.calculateDueDate()
+      const newStatus = await createTodo(this.props.auth.getIdToken(), {
+        content: this.state.newStatusContent,
       })
       this.setState({
-        todos: [...this.state.todos, newTodo],
-        newTodoName: ''
+        status: [...this.state.status, newStatus],
+        newStatusContent: ''
       })
     } catch {
       alert('Todo creation failed')
     }
   }
 
-  onTodoDelete = async (todoId: string) => {
+  onTodoDelete = async (statusId: string) => {
     try {
-      await deleteTodo(this.props.auth.getIdToken(), todoId)
+      await deleteTodo(this.props.auth.getIdToken(), statusId)
       this.setState({
-        todos: this.state.todos.filter(todo => todo.todoId != todoId)
+        status: this.state.status.filter(stat => stat.statusId != statusId)
       })
     } catch {
       alert('Todo deletion failed')
     }
   }
 
-  onTodoCheck = async (pos: number) => {
-    try {
-      const todo = this.state.todos[pos]
-      await patchTodo(this.props.auth.getIdToken(), todo.todoId, {
-        name: todo.name,
-        dueDate: todo.dueDate,
-        done: !todo.done
-      })
-      this.setState({
-        todos: update(this.state.todos, {
-          [pos]: { done: { $set: !todo.done } }
-        })
-      })
-    } catch {
-      alert('Todo deletion failed')
-    }
-  }
+  // onTodoCheck = async (pos: number) => {
+  //   try {
+  //     const status = this.state.status[pos]
+  //     await patchTodo(this.props.auth.getIdToken(), status.userId, {
+  //       content: status.content,
+  //       userId: status.userId
+  //     })
+  //     this.setState({
+  //       status: update(this.state.status, {
+  //         [pos]: { done: { $set: !todo.done } }
+  //       })
+  //     })
+  //   } catch {
+  //     alert('Todo deletion failed')
+  //   }
+  // }
 
   async componentDidMount() {
     try {
-      const todos = await getTodos(this.props.auth.getIdToken())
+      const status = await getTodos(this.props.auth.getIdToken())
       this.setState({
-        todos,
+        status,
         loadingTodos: false
       })
     } catch (e) {
@@ -104,7 +104,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   render() {
     return (
       <div>
-        <Header as="h1">TODOs</Header>
+        <Header as="h1">Status</Header>
 
         {this.renderCreateTodoInput()}
 
@@ -150,7 +150,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     return (
       <Grid.Row>
         <Loader indeterminate active inline="centered">
-          Loading TODOs
+          Loading Statuss
         </Loader>
       </Grid.Row>
     )
@@ -158,50 +158,74 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   renderTodosList() {
     return (
-      <Grid padded>
-        {this.state.todos.map((todo, pos) => {
+      // <Grid padded>
+        this.state.status.map((stat, pos) => {
+
+          // return (
+          //   <Grid.Row key={stat.statusId}>
+          //     <Grid.Column width={1} verticalAlign="middle">
+          //     </Grid.Column>
+          //     <Grid.Column width={10} verticalAlign="middle">
+          //       {stat.content}
+          //     </Grid.Column>
+          //     <Grid.Column width={1} floated="right">
+          //       <Button
+          //         icon
+          //         color="blue"
+          //         onClick={() => this.onEditButtonClick(stat.statusId)}
+          //       >
+          //         <Icon name="pencil" />
+          //       </Button>
+          //     </Grid.Column>
+          //     <Grid.Column width={1} floated="right">
+          //       <Button
+          //         icon
+          //         color="red"
+          //         onClick={() => this.onTodoDelete(stat.statusId)}
+          //       >
+          //         <Icon name="delete" />
+          //       </Button>
+          //     </Grid.Column>
+          //     {stat.attachmentUrl && (
+          //       <Image src={stat.attachmentUrl} size="small" wrapped />
+          //     )}
+          //     <Grid.Column width={16}>
+          //       <Divider />
+          //     </Grid.Column>
+          //   </Grid.Row>
+          // )
+
           return (
-            <Grid.Row key={todo.todoId}>
-              <Grid.Column width={1} verticalAlign="middle">
-                <Checkbox
-                  onChange={() => this.onTodoCheck(pos)}
-                  checked={todo.done}
-                />
-              </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
-                {todo.name}
-              </Grid.Column>
-              <Grid.Column width={3} floated="right">
-                {todo.dueDate}
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
-                >
-                  <Icon name="pencil" />
-                </Button>
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="red"
-                  onClick={() => this.onTodoDelete(todo.todoId)}
-                >
-                  <Icon name="delete" />
-                </Button>
-              </Grid.Column>
-              {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped />
-              )}
-              <Grid.Column width={16}>
-                <Divider />
-              </Grid.Column>
-            </Grid.Row>
+            <Card>
+              {stat.attachmentUrl && (
+              <Image src={stat.attachmentUrl} wrapped ui={false} /> )}
+              <Card.Content>
+                {/* <Card.Header>Matthew</Card.Header> */}
+                <Card.Meta>
+                  <span className='date'></span>
+                </Card.Meta>
+                <Card.Description>
+                  {stat.content}
+                </Card.Description>
+              </Card.Content>
+              <Button
+                icon
+                color="red"
+                onClick={() => this.onTodoDelete(stat.statusId)}
+              >
+                <Icon name="delete" />
+              </Button>
+              <Button
+                icon
+                color="blue"
+                onClick={() => this.onEditButtonClick(stat.statusId)}
+              >
+                <Icon name="pencil" />
+              </Button>
+            </Card>
           )
-        })}
-      </Grid>
+        })
+      // </Grid>
     )
   }
 

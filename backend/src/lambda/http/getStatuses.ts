@@ -1,14 +1,13 @@
 import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-
-import { getPreSingedUrl } from '../../BusinessLogic/status'
+import { getStatuses } from "../../BusinessLogic/status";
+import { getUserId } from '../utils';
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
 
-  const statusId = event.pathParameters.statusId;
-
-  const url = await getPreSingedUrl(statusId);
+  const userId = getUserId(event);
+  const statuses = await getStatuses(userId);
   
   return {
     statusCode: 201,
@@ -17,7 +16,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Credentials': true
     },
     body: JSON.stringify({
-      "uploadUrl" : url
+      "items": statuses
     })
   }
 }
