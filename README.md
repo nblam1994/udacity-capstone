@@ -12,12 +12,12 @@ This application will allow creating/removing/updating/fetching status items. Ea
 
 # status items
 
-The application should store TODO items, and each TODO item contains the following fields:
+The application should store STATUS items, and each STATUS item contains the following fields:
 
 * `statusId` (string) - a unique id for an item
 * `createdAt` (string) - date and time when an item was created
 * `UserId` (string) - id of the user status belongs to 
-* `attachmentUrl` (string) (optional) - a URL pointing to an image attached to a TODO item
+* `attachmentUrl` (string) (optional) - a URL pointing to an image attached to a STATUS item
 
 
 # Frontend
@@ -65,5 +65,5 @@ npm install
 npm run start
 ```
 
-This should start a development server with the React application that will interact with the serverless TODO application.
+This should start a development server with the React application that will interact with the serverless STATUS application.
 
